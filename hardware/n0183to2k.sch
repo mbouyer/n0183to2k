@@ -1190,10 +1190,10 @@ F 3 "~" H 6700 5450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Diode:1.5KExxA D?
+L Diode:1.5KExxA D4
 U 1 1 622C1983
 P 2450 5900
-F 0 "D?" V 2500 6050 50  0000 R CNN
+F 0 "D4" V 2500 6050 50  0000 R CNN
 F 1 "SMBJ16A" H 2600 5800 50  0000 R CNN
 F 2 "Diode_SMD:D_SMB_Handsoldering" H 2450 5700 50  0001 C CNN
 F 3 "https://www.vishay.com/docs/88301/15ke.pdf" H 2400 5900 50  0001 C CNN
