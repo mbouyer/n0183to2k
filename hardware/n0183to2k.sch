@@ -678,7 +678,7 @@ F 3 "" H 3650 5150 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	3650 5150 3550 5150
+	3650 5150 3600 5150
 Text Label 3600 4950 0    50   ~ 0
 SCL
 Text Label 3600 5050 0    50   ~ 0
@@ -906,8 +906,6 @@ Text Label 900  6600 0    50   ~ 0
 Wire Wire Line
 	900  6600 1100 6600
 Connection ~ 1100 6600
-Text Label 3600 5250 0    50   ~ 0
-12V_ON
 Wire Wire Line
 	3600 5250 3550 5250
 Wire Wire Line
@@ -1063,10 +1061,6 @@ Connection ~ 3600 4200
 Wire Wire Line
 	3600 4200 3600 4250
 Wire Wire Line
-	1950 3850 1850 3850
-Wire Wire Line
-	1850 3850 1850 3950
-Wire Wire Line
 	1850 4350 1950 4350
 Wire Wire Line
 	1950 4250 1850 4250
@@ -1211,4 +1205,13 @@ Wire Wire Line
 	2650 5750 2650 5850
 Connection ~ 2450 5750
 Connection ~ 2650 5850
+Wire Wire Line
+	1950 3850 900  3850
+Wire Wire Line
+	900  3850 900  6600
+Wire Wire Line
+	3600 5250 3600 5150
+Connection ~ 3600 5150
+Wire Wire Line
+	3600 5150 3550 5150
 $EndSCHEMATC
