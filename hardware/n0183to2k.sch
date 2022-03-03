@@ -542,10 +542,6 @@ F 4 "RS 790-1073" H 2350 6250 50  0001 C CNN "P/N"
 	0    -1   1    0   
 $EndComp
 Connection ~ 2950 6050
-Wire Wire Line
-	2650 5850 2350 5850
-Wire Wire Line
-	2350 5850 2350 6050
 $Comp
 L power:+12V #PWR03
 U 1 1 60530E80
@@ -557,7 +553,6 @@ F 3 "" H 1700 5500 50  0001 C CNN
 	1    1700 5500
 	1    0    0    -1  
 $EndComp
-Connection ~ 2650 5850
 Wire Wire Line
 	2650 6050 2950 6050
 Wire Wire Line
@@ -1194,4 +1189,26 @@ F 3 "~" H 6700 5450 50  0001 C CNN
 	1    6700 5450
 	1    0    0    -1  
 $EndComp
+$Comp
+L Diode:1.5KExxA D?
+U 1 1 622C1983
+P 2450 5900
+F 0 "D?" V 2500 6050 50  0000 R CNN
+F 1 "SMBJ16A" H 2600 5800 50  0000 R CNN
+F 2 "Diode_SMD:D_SMB_Handsoldering" H 2450 5700 50  0001 C CNN
+F 3 "https://www.vishay.com/docs/88301/15ke.pdf" H 2400 5900 50  0001 C CNN
+	1    2450 5900
+	0    1    1    0   
+$EndComp
+Connection ~ 2450 6050
+Wire Wire Line
+	2450 5750 2350 5750
+Wire Wire Line
+	2350 5750 2350 6050
+Wire Wire Line
+	2450 5750 2650 5750
+Wire Wire Line
+	2650 5750 2650 5850
+Connection ~ 2450 5750
+Connection ~ 2650 5850
 $EndSCHEMATC
