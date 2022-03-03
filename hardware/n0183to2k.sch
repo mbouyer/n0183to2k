@@ -1150,4 +1150,48 @@ Wire Wire Line
 Wire Wire Line
 	3550 3850 3950 3850
 Connection ~ 3950 3850
+$Comp
+L Mechanical:MountingHole H1
+U 1 1 62257829
+P 6700 4850
+F 0 "H1" H 6800 4896 50  0000 L CNN
+F 1 "MountingHole" H 6800 4805 50  0000 L CNN
+F 2 "" H 6700 4850 50  0001 C CNN
+F 3 "~" H 6700 4850 50  0001 C CNN
+	1    6700 4850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H2
+U 1 1 62257F08
+P 6700 5050
+F 0 "H2" H 6800 5096 50  0000 L CNN
+F 1 "MountingHole" H 6800 5005 50  0000 L CNN
+F 2 "" H 6700 5050 50  0001 C CNN
+F 3 "~" H 6700 5050 50  0001 C CNN
+	1    6700 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H3
+U 1 1 62258377
+P 6700 5250
+F 0 "H3" H 6800 5296 50  0000 L CNN
+F 1 "MountingHole" H 6800 5205 50  0000 L CNN
+F 2 "" H 6700 5250 50  0001 C CNN
+F 3 "~" H 6700 5250 50  0001 C CNN
+	1    6700 5250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H4
+U 1 1 6225869C
+P 6700 5450
+F 0 "H4" H 6800 5496 50  0000 L CNN
+F 1 "MountingHole" H 6800 5405 50  0000 L CNN
+F 2 "" H 6700 5450 50  0001 C CNN
+F 3 "~" H 6700 5450 50  0001 C CNN
+	1    6700 5450
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
