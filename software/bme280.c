@@ -1122,9 +1122,9 @@ static int32_t compensate_temperature(const struct bme280_uncomp_data *uncomp_da
     int32_t temperature_min = -4000;
     int32_t temperature_max = 8500;
 
-    var1 = (int32_t)((uncomp_data->temperature / 8) - ((int32_t)calib_data->dig_t1 * 2));
+    var1 = (int32_t)((int32_t)(uncomp_data->temperature / 8) - ((int32_t)calib_data->dig_t1 * 2));
     var1 = (var1 * ((int32_t)calib_data->dig_t2)) / 2048;
-    var2 = (int32_t)((uncomp_data->temperature / 16) - ((int32_t)calib_data->dig_t1));
+    var2 = (int32_t)((int32_t)(uncomp_data->temperature / 16) - ((int32_t)calib_data->dig_t1));
     var2 = (((var2 * var2) / 4096) * ((int32_t)calib_data->dig_t3)) / 16384;
     calib_data->t_fine = var1 + var2;
     temperature = (calib_data->t_fine * 5 + 128) / 256;
