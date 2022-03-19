@@ -454,9 +454,6 @@ struct bme280_dev
     /*< Write function pointer */
     bme280_write_fptr_t write;
 
-    /*< Delay function pointer */
-    bme280_delay_us_fptr_t delay_us;
-
     /*< Trim data */
     struct bme280_calib_data calib_data;
 
