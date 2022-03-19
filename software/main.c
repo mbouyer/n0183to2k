@@ -52,6 +52,8 @@ unsigned int timer0_read(void);
 #define LED LATBbits.LATB0
 #define PWR_ANEMO LATAbits.LATA0
 
+static unsigned char led_pattern;
+
 static char counter_10hz;
 static char counter_1hz;
 static unsigned char seconds;
@@ -447,6 +449,8 @@ main(void)
 	U2CON1 = 0x80; /* on */
 	PIE8bits.U2RXIE = 1;
 
+	led_pattern = 0x55; /* 4 blinks at startup */
+
 again:
 	PWR_ANEMO = 1;
 	printf("hello user_id 0x%lx devid 0x%x\n", nmea2000_user_id, devid);
@@ -472,13 +476,21 @@ again:
 			if (counter_1hz == 0) {
 				counter_1hz = 10;
 				seconds++;
+				if (nmea2000_status != NMEA2000_S_OK &&
+				    led_pattern == 0) {
+					led_pattern = 0xf; /* one long blink */
+				}
 				if (seconds == 10) {
 					seconds = 0;
-					LED = 1;
-				} else {
-					LED  = 0;
-				}
+					/* in normal state, one short
+					 * blink every 10s
+					 */
+					if (led_pattern == 0)
+						led_pattern = 1;
+				} 
 			}
+			LED = (led_pattern & 0x1);
+			led_pattern = led_pattern >> 1;
 		}
 		if (softintrs.bits.anemo_rx) {
 			parse_anemo_rx();
