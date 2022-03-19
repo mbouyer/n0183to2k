@@ -40,6 +40,7 @@
  * @brief Sensor driver for BME280 sensor
  */
 #include "bme280.h"
+#include "i2c.h"
 
 /**\name Internal macros */
 /* To identify osr settings selected by user */
@@ -832,7 +833,7 @@ static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
         }
 
         /* Write the oversampling settings in the register */
-        rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, reg_data, 1);
+        rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, reg_data);
     }
 
     return rslt;

@@ -101,7 +101,6 @@ int8_t bme280_init(struct bme280_dev *dev);
  * @param[in] reg_addr : Register addresses to where the data is to be written
  * @param[in] reg_data : Pointer to data buffer which is to be written
  *                       in the reg_addr of sensor.
- * @param[in,out] dev  : Structure instance of bme280_dev
  *
  * @return Result of API execution status.
  *
@@ -110,7 +109,7 @@ int8_t bme280_init(struct bme280_dev *dev);
  * @retval < 0 -> Fail.
  *
  */
-int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *dev);
+int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data);
 
 /*!
  * \ingroup bme280ApiRegister
@@ -123,7 +122,6 @@ int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *de
  * @param[in] reg_addr  : Register address from where the data to be read
  * @param[out] reg_data : Pointer to data buffer to store the read data.
  * @param[in] len       : No of bytes of data to be read.
- * @param[in,out] dev   : Structure instance of bme280_dev.
  *
  * @return Result of API execution status.
  *
@@ -132,7 +130,7 @@ int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *de
  * @retval < 0 -> Fail.
  *
  */
-int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len, struct bme280_dev *dev);
+int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len);
 
 /**
  * \ingroup bme280
@@ -230,11 +228,10 @@ int8_t bme280_set_sensor_mode(uint8_t sensor_mode, struct bme280_dev *dev);
  * \ingroup bme280ApiSensorMode
  * \page bme280_api_bme280_get_sensor_mode bme280_get_sensor_mode
  * \code
- * int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, const struct bme280_dev *dev);
+ * int8_t bme280_get_sensor_mode(uint8_t *sensor_mode);
  * \endcode
  * @details This API gets the power mode of the sensor.
  *
- * @param[in] dev : Structure instance of bme280_dev.
  * @param[out] sensor_mode : Pointer variable to store the power mode.
  *
  *   sensor_mode            |   Macros
@@ -250,7 +247,7 @@ int8_t bme280_set_sensor_mode(uint8_t sensor_mode, struct bme280_dev *dev);
  * @retval < 0 -> Fail.
  *
  */
-int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev);
+int8_t bme280_get_sensor_mode(uint8_t *sensor_mode);
 
 /**
  * \ingroup bme280
@@ -262,11 +259,9 @@ int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev);
  * \ingroup bme280ApiSystem
  * \page bme280_api_bme280_soft_reset bme280_soft_reset
  * \code
- * int8_t bme280_soft_reset(struct bme280_dev *dev);
+ * int8_t bme280_soft_reset(void)
  * \endcode
  * @details This API soft-resets the sensor.
- *
- * @param[in,out] dev : Structure instance of bme280_dev.
  *
  * @return Result of API execution status.
  *
@@ -275,7 +270,7 @@ int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev);
  * @retval < 0 -> Fail.
  *
  */
-int8_t bme280_soft_reset(struct bme280_dev *dev);
+int8_t bme280_soft_reset(void);
 
 /**
  * \ingroup bme280
@@ -386,6 +381,11 @@ int8_t bme280_compensate_data(uint8_t sensor_comp,
  *
  */
 uint32_t bme280_cal_meas_delay(const struct bme280_settings *settings);
+
+/* user-provided helpers */
+void delay_ms(unsigned char);
+
+#define BME280_ADDR	(0x77 << 1)
 
 #ifdef __cplusplus
 }
