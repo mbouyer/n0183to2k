@@ -426,17 +426,8 @@ int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len, struct
     /* Proceed if null check is fine */
     if (reg_data != NULL)
     {
-        /* If interface selected is SPI */
-        if (dev->intf != BME280_I2C_INTF)
-        {
-            reg_addr = reg_addr | 0x80;
-        }
-
         /* Read the data  */
-        dev->intf_rslt = i2c_readreg(BME280_ADDR, reg_addr, reg_data, len);
-
-        /* Check for communication error */
-        if (dev->intf_rslt != len)
+        if (i2c_readreg(BME280_ADDR, reg_addr, reg_data, len) != len)
         {
             rslt = BME280_E_COMM_FAIL;
         }
@@ -457,10 +448,7 @@ int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *de
 {
     int8_t rslt = BME280_OK;
 
-    dev->intf_rslt = i2c_writereg(BME280_ADDR, reg_addr, reg_data);
-
-    /* Check for communication error */
-    if (dev->intf_rslt != 1)
+    if (i2c_writereg(BME280_ADDR, reg_addr, reg_data) != 1)
     {
         rslt = BME280_E_COMM_FAIL;
     }

@@ -439,29 +439,11 @@ struct bme280_dev
     /*< Chip Id */
     uint8_t chip_id;
 
-    /*< Interface function pointer used to enable the device address for I2C and chip selection for SPI */
-    void *intf_ptr;
-
-    /*< Interface Selection
-     * For SPI, intf = BME280_SPI_INTF
-     * For I2C, intf = BME280_I2C_INTF
-     * */
-    enum bme280_intf intf;
-
-    /*< Read function pointer */
-    bme280_read_fptr_t read;
-
-    /*< Write function pointer */
-    bme280_write_fptr_t write;
-
     /*< Trim data */
     struct bme280_calib_data calib_data;
 
     /*< Sensor settings */
     struct bme280_settings settings;
-
-    /*< Variable to store result of read/write function */
-    BME280_INTF_RET_TYPE intf_rslt;
 };
 
 #endif /* BME280_DEFS_H_ */
