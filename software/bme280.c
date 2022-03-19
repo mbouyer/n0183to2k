@@ -93,20 +93,6 @@ static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev);
 static int8_t null_ptr_check(const struct bme280_dev *dev);
 
 /*!
- * @brief This internal API interleaves the register address between the
- * register data buffer for burst write operation.
- *
- * @param[in] reg_addr   : Contains the register address array.
- * @param[out] temp_buff : Contains the temporary buffer to store the
- * register data and register address.
- * @param[in] reg_data   : Contains the register data to be written in the
- * temporary buffer.
- * @param[in] len        : No of bytes of data to be written for burst write.
- *
- */
-static void interleave_reg_addr(const uint8_t *reg_addr, uint8_t *temp_buff, const uint8_t *reg_data, uint8_t len);
-
-/*!
  * @brief This internal API reads the calibration data from the sensor, parse
  * it and store in the device structure.
  *
@@ -492,63 +478,22 @@ int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len, struct
  * @brief This API writes the given data to the register address
  * of the sensor.
  */
-int8_t bme280_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, struct bme280_dev *dev)
+int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t temp_buff[20]; /* Typically not to write more than 10 registers */
-
-    if (len > 10)
-    {
-        len = 10;
-    }
-
-    uint16_t temp_len;
-    uint8_t reg_addr_cnt;
 
     /* Check for null pointer in the device structure*/
     rslt = null_ptr_check(dev);
 
     /* Check for arguments validity */
-    if ((rslt == BME280_OK) && (reg_addr != NULL) && (reg_data != NULL))
+    if ((rslt == BME280_OK))
     {
-        if (len != 0)
+        dev->intf_rslt = dev->write(reg_addr, reg_data, dev->intf_ptr);
+
+        /* Check for communication error */
+        if (dev->intf_rslt != BME280_INTF_RET_SUCCESS)
         {
-            temp_buff[0] = reg_data[0];
-
-            /* If interface selected is SPI */
-            if (dev->intf != BME280_I2C_INTF)
-            {
-                for (reg_addr_cnt = 0; reg_addr_cnt < len; reg_addr_cnt++)
-                {
-                    reg_addr[reg_addr_cnt] = reg_addr[reg_addr_cnt] & 0x7F;
-                }
-            }
-
-            /* Burst write mode */
-            if (len > 1)
-            {
-                /* Interleave register address w.r.t data for
-                 * burst write
-                 */
-                interleave_reg_addr(reg_addr, temp_buff, reg_data, len);
-                temp_len = ((len * 2) - 1);
-            }
-            else
-            {
-                temp_len = len;
-            }
-
-            dev->intf_rslt = dev->write(reg_addr[0], temp_buff, temp_len, dev->intf_ptr);
-
-            /* Check for communication error */
-            if (dev->intf_rslt != BME280_INTF_RET_SUCCESS)
-            {
-                rslt = BME280_E_COMM_FAIL;
-            }
-        }
-        else
-        {
-            rslt = BME280_E_INVALID_LEN;
+            rslt = BME280_E_COMM_FAIL;
         }
     }
     else
@@ -695,12 +640,8 @@ int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev)
 int8_t bme280_soft_reset(struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t reg_addr = BME280_RESET_ADDR;
     uint8_t status_reg = 0;
     uint8_t try_run = 5;
-
-    /* 0xB6 is the soft reset command */
-    uint8_t soft_rst_cmd = BME280_SOFT_RESET_COMMAND;
 
     /* Check for null pointer in the device structure*/
     rslt = null_ptr_check(dev);
@@ -709,7 +650,8 @@ int8_t bme280_soft_reset(struct bme280_dev *dev)
     if (rslt == BME280_OK)
     {
         /* Write the soft reset command in the sensor */
-        rslt = bme280_set_regs(&reg_addr, &soft_rst_cmd, 1, dev);
+        rslt = bme280_set_regs(BME280_RESET_ADDR,
+	    BME280_SOFT_RESET_COMMAND, dev);
 
         if (rslt == BME280_OK)
         {
@@ -928,24 +870,22 @@ static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, 
     int8_t rslt;
     uint8_t ctrl_hum;
     uint8_t ctrl_meas;
-    uint8_t reg_addr = BME280_CTRL_HUM_ADDR;
 
     ctrl_hum = settings->osr_h & BME280_CTRL_HUM_MSK;
 
     /* Write the humidity control value in the register */
-    rslt = bme280_set_regs(&reg_addr, &ctrl_hum, 1, dev);
+    rslt = bme280_set_regs(BME280_CTRL_HUM_ADDR, ctrl_hum, dev);
 
     /* Humidity related changes will be only effective after a
      * write operation to ctrl_meas register
      */
     if (rslt == BME280_OK)
     {
-        reg_addr = BME280_CTRL_MEAS_ADDR;
-        rslt = bme280_get_regs(reg_addr, &ctrl_meas, 1, dev);
+        rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &ctrl_meas, 1, dev);
 
         if (rslt == BME280_OK)
         {
-            rslt = bme280_set_regs(&reg_addr, &ctrl_meas, 1, dev);
+            rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, ctrl_meas, dev);
         }
     }
 
@@ -961,10 +901,9 @@ static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
                                           struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t reg_addr = BME280_CTRL_MEAS_ADDR;
     uint8_t reg_data;
 
-    rslt = bme280_get_regs(reg_addr, &reg_data, 1, dev);
+    rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &reg_data, 1, dev);
 
     if (rslt == BME280_OK)
     {
@@ -979,7 +918,7 @@ static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
         }
 
         /* Write the oversampling settings in the register */
-        rslt = bme280_set_regs(&reg_addr, &reg_data, 1, dev);
+        rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, reg_data, 1, dev);
     }
 
     return rslt;
@@ -994,10 +933,9 @@ static int8_t set_filter_standby_settings(uint8_t desired_settings,
                                           struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t reg_addr = BME280_CONFIG_ADDR;
     uint8_t reg_data;
 
-    rslt = bme280_get_regs(reg_addr, &reg_data, 1, dev);
+    rslt = bme280_get_regs(BME280_CONFIG_ADDR, &reg_data, 1, dev);
 
     if (rslt == BME280_OK)
     {
@@ -1012,7 +950,7 @@ static int8_t set_filter_standby_settings(uint8_t desired_settings,
         }
 
         /* Write the oversampling settings in the register */
-        rslt = bme280_set_regs(&reg_addr, &reg_data, 1, dev);
+        rslt = bme280_set_regs(BME280_CONFIG_ADDR, reg_data, dev);
     }
 
     return rslt;
@@ -1074,13 +1012,12 @@ static void parse_device_settings(const uint8_t *reg_data, struct bme280_setting
 static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t reg_addr = BME280_PWR_CTRL_ADDR;
 
     /* Variable to store the value read from power mode register */
     uint8_t sensor_mode_reg_val;
 
     /* Read the power mode register */
-    rslt = bme280_get_regs(reg_addr, &sensor_mode_reg_val, 1, dev);
+    rslt = bme280_get_regs(BME280_PWR_CTRL_ADDR, &sensor_mode_reg_val, 1, dev);
 
     /* Set the power mode */
     if (rslt == BME280_OK)
@@ -1088,7 +1025,7 @@ static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
         sensor_mode_reg_val = BME280_SET_BITS_POS_0(sensor_mode_reg_val, BME280_SENSOR_MODE, sensor_mode);
 
         /* Write the power mode in the register */
-        rslt = bme280_set_regs(&reg_addr, &sensor_mode_reg_val, 1, dev);
+        rslt = bme280_set_regs(BME280_PWR_CTRL_ADDR, sensor_mode_reg_val, dev);
     }
 
     return rslt;
@@ -1452,13 +1389,12 @@ static uint32_t compensate_humidity(const struct bme280_uncomp_data *uncomp_data
 static int8_t get_calib_data(struct bme280_dev *dev)
 {
     int8_t rslt;
-    uint8_t reg_addr = BME280_TEMP_PRESS_CALIB_DATA_ADDR;
 
     /* Array to store calibration data */
     uint8_t calib_data[BME280_TEMP_PRESS_CALIB_DATA_LEN] = { 0 };
 
     /* Read the calibration data from the sensor */
-    rslt = bme280_get_regs(reg_addr, calib_data, BME280_TEMP_PRESS_CALIB_DATA_LEN, dev);
+    rslt = bme280_get_regs(BME280_TEMP_PRESS_CALIB_DATA_ADDR, calib_data, BME280_TEMP_PRESS_CALIB_DATA_LEN, dev);
 
     if (rslt == BME280_OK)
     {
@@ -1466,10 +1402,9 @@ static int8_t get_calib_data(struct bme280_dev *dev)
          * it in device structure
          */
         parse_temp_press_calib_data(calib_data, dev);
-        reg_addr = BME280_HUMIDITY_CALIB_DATA_ADDR;
 
         /* Read the humidity calibration data from the sensor */
-        rslt = bme280_get_regs(reg_addr, calib_data, BME280_HUMIDITY_CALIB_DATA_LEN, dev);
+        rslt = bme280_get_regs(BME280_HUMIDITY_CALIB_DATA_ADDR, calib_data, BME280_HUMIDITY_CALIB_DATA_LEN, dev);
 
         if (rslt == BME280_OK)
         {
@@ -1481,21 +1416,6 @@ static int8_t get_calib_data(struct bme280_dev *dev)
     }
 
     return rslt;
-}
-
-/*!
- * @brief This internal API interleaves the register address between the
- * register data buffer for burst write operation.
- */
-static void interleave_reg_addr(const uint8_t *reg_addr, uint8_t *temp_buff, const uint8_t *reg_data, uint8_t len)
-{
-    uint8_t index;
-
-    for (index = 1; index < len; index++)
-    {
-        temp_buff[(index * 2) - 1] = reg_addr[index];
-        temp_buff[index * 2] = reg_data[index];
-    }
 }
 
 /*!

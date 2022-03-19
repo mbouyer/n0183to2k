@@ -94,14 +94,13 @@ int8_t bme280_init(struct bme280_dev *dev);
  * \ingroup bme280ApiRegister
  * \page bme280_api_bme280_set_regs bme280_set_regs
  * \code
- * int8_t bme280_set_regs(const uint8_t reg_addr, const uint8_t *reg_data, uint8_t len, struct bme280_dev *dev);
+ * int8_t bme280_set_regs(const uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *dev);
  * \endcode
  * @details This API writes the given data to the register address of the sensor
  *
  * @param[in] reg_addr : Register addresses to where the data is to be written
  * @param[in] reg_data : Pointer to data buffer which is to be written
  *                       in the reg_addr of sensor.
- * @param[in] len      : No of bytes of data to write
  * @param[in,out] dev  : Structure instance of bme280_dev
  *
  * @return Result of API execution status.
@@ -111,7 +110,7 @@ int8_t bme280_init(struct bme280_dev *dev);
  * @retval < 0 -> Fail.
  *
  */
-int8_t bme280_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, struct bme280_dev *dev);
+int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *dev);
 
 /*!
  * \ingroup bme280ApiRegister
