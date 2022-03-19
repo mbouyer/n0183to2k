@@ -35,6 +35,7 @@
 #include <raddeg.h>
 #include "serial.h"
 #include "i2c.h"
+#include "bme280.h"
 
 unsigned int devid, revid;
 unsigned long nmea2000_user_id;
@@ -74,17 +75,12 @@ static enum i2c_status {
 	FAIL
 } i2c_status;
 
-#define STH20_ADDR	0x40
-#define STH20_READT_H	0xe3
-#define STH20_READH_H	0xe5
-#define STH20_READT	0xf3
-#define STH20_READH	0xf5
-#define STH20_WRITER	0xe6
-#define STH20_READR	0xe7
-#define STH20_RESET	0xfe
+struct bme280_dev bme280_dev;
 
 int32_t temp; /* degK * 100 */
 uint32_t hum; /* %RH * 1000 */
+uint32_t press; /* Pa */
+uint8_t bme280_id;
 static char counter_sth20;
 static uint16_t i2cval;
 
@@ -433,6 +429,12 @@ main(void)
 	/* enable watch dog timer */
 	WDTCON0bits.SEN = 1;
 
+	if (bme280_init(&bme280_dev) != BME280_OK) {
+		printf("bme280 fail\n");
+	} else {
+		printf("bme280 id 0x%x\n", bme280_dev.chip_id);
+	}
+
 	printf("ready");
 	while (nmea2000_status != NMEA2000_S_OK) {
 		nmea2000_poll(5);
@@ -534,6 +536,7 @@ end:
 	INTCON0bits.GIEH=0;
 	INTCON0bits.GIEL=0;
 	RESET();
+	return 0;
 }
 
 unsigned int
@@ -547,6 +550,16 @@ timer0_read()
 	asm("movff TMR0H, timer0_read@value+1");
 	ei();
 	return value;
+}
+
+void
+delay_ms(unsigned char delay)
+{
+	unsigned int date = timer0_read();
+	unsigned int diff;
+	do {
+		diff = timer0_read() - date;
+	} while (diff < delay * TIMER0_1MS);
 }
 
 void __interrupt(__irq(TU16A), __high_priority, base(IVECT_BASE))

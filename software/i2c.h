@@ -48,6 +48,4 @@
 
 char i2c_readreg(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size);
 char i2c_readreg_be(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size);
-char i2c_writereg(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size);
-char i2c_writereg_be(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size);
-char i2c_writecmd(const uint8_t address, uint8_t reg);
+char i2c_writereg(const uint8_t address, uint8_t reg, uint8_t data);

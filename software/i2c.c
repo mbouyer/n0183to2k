@@ -164,8 +164,8 @@ i2c_readreg_be(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size) 
 	return i2c_readreg_s(address, reg, data, size, 1);
 }
 
-static char
-i2c_writereg_s(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size, uint8_t swap)
+char
+i2c_writereg(const uint8_t address, uint8_t reg, uint8_t data)
 {
 	uint8_t i;
 
@@ -178,37 +178,13 @@ i2c_writereg_s(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size, 
 	I2C1CON1bits.ACKCNT = 1;
 	I2C1ADB1 = address;
 	I2C1CNTH = 0;
-	I2C1CNTL = size + 1;
+	I2C1CNTL = 1;
 	I2C1TXB = reg;
 	I2C1CON0bits.S = 1;
-	for (i = size ; i != 0; i--) {
-		I2C_WAIT_TX;
-		if (swap) {
-			I2C1TXB = data[i - 1];
-		} else {
-			I2C1TXB = data[size - i];
-		}
-	}
+	I2C_WAIT_TX;
+	I2C1TXB = data;
 	return 1;
 }
-
-char
-i2c_writereg(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size)
-{
-	return i2c_writereg_s(address, reg, data, size, 0);
-}
-
-char
-i2c_writereg_be(const uint8_t address, uint8_t reg, uint8_t *data, uint8_t size)
-{
-	return i2c_writereg_s(address, reg, data, size, 1);
-}
-
-char
-i2c_writecmd(const uint8_t address, uint8_t reg)                              
-{
-	return i2c_writereg(address, reg, NULL, 0);
-}                                     
 
 static void
 i2c_status(void)
