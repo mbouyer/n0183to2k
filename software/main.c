@@ -340,7 +340,7 @@ main(void)
 	PMD3 = 0xff;
 	PMD4 = 0xff;
 	PMD5 = 0xff;
-	PMD6 = 0xf6; /* keep UART1 and I2C */
+	PMD6 = 0xe6; /* keep UART2, UART1 and I2C */
 	PMD7 = 0xff;
 	PMD8 = 0xff;
 
@@ -416,6 +416,7 @@ main(void)
 	U2BRGH = 0;
 	U2CON0 = 0x10; /* RXEN */
 	U2CON2 = 0x80; /* run during overflow */
+	U2CON1 = 0; /* off for now */
 	IPR8bits.U2RXIP = 0;
 
 	INTCON0bits.GIEH=1;  /* enable high-priority interrupts */
@@ -539,7 +540,7 @@ irql_uart2(void)
 {
 	char c;
 	while (PIE8bits.U2RXIE && PIR8bits.U2RXIF) {
-		c = U1RXB;
+		c = U2RXB;
 		if (c == 0x0a) {
 			; /* ignore */
 		} else if (c == 0x0d) {
