@@ -472,6 +472,10 @@ again:
 
 		if (softintrs.bits.int_10hz) {
 			softintrs.bits.int_10hz = 0;
+			if (canbus_mute)
+				PWR_ANEMO = 0;
+			else
+				PWR_ANEMO = 1;
 			counter_1hz--;
 			if (counter_1hz == 0) {
 				counter_1hz = 10;
@@ -480,6 +484,12 @@ again:
 				    led_pattern == 0) {
 					led_pattern = 0xf; /* one long blink */
 				}
+				if (canbus_mute) {
+					led_pattern = 0x1; /* 1 short blink */
+				} else if (wind_ok == 0) {
+					led_pattern = 0x5; /* 2 short blink */
+				}
+				wind_ok = 0;
 				if (seconds == 10) {
 					seconds = 0;
 					/* in normal state, one short
