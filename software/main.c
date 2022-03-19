@@ -411,7 +411,7 @@ main(void)
 	I2C_INIT;
 
 	/* configure UART2 (anemo) for 4800Bps at 10Mhz */
-	U1RXPPS = 0x17; /* RC7 */
+	U2RXPPS = 0x17; /* RC7 */
 	U2BRGL = 129;
 	U2BRGH = 0;
 	U2CON0 = 0x10; /* RXEN */
@@ -447,6 +447,7 @@ main(void)
 	PIE8bits.U2RXIE = 1;
 
 again:
+	PWR_ANEMO = 1;
 	printf("hello user_id 0x%lx devid 0x%x\n", nmea2000_user_id, devid);
 	while (1) {
 		CLRWDT();
@@ -501,9 +502,12 @@ again:
 		goto again;
 	}
 end:
+	WDTCON0bits.SEN = 0;
 	printf("returning\n");
-	while (PIE4bits.U1TXIE)
+	while (!PIR4bits.U1TXIF)
 		; /* wait for transmit to complete */
+	LED = 0;
+	PWR_ANEMO = 0;
 	INTCON0bits.GIEH=0;
 	INTCON0bits.GIEL=0;
 	RESET();
