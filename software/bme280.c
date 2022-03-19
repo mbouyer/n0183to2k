@@ -60,7 +60,7 @@
  * @retval < 0 -> Fail.
  *
  */
-static int8_t put_device_to_sleep(struct bme280_dev *dev);
+static int8_t put_device_to_sleep(void);
 
 /*!
  * @brief This internal API writes the power mode in the sensor.
@@ -75,7 +75,7 @@ static int8_t put_device_to_sleep(struct bme280_dev *dev);
  * @retval < 0 -> Fail.
  *
  */
-static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev);
+static int8_t write_power_mode(uint8_t sensor_mode);
 
 /*!
  * @brief This internal API reads the calibration data from the sensor, parse
@@ -226,7 +226,7 @@ static uint8_t are_settings_changed(uint8_t sub_settings, uint8_t desired_settin
  * @retval < 0 -> Fail.
  *
  */
-static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, struct bme280_dev *dev);
+static int8_t set_osr_humidity_settings(const struct bme280_settings *settings);
 
 /*!
  * @brief This internal API sets the oversampling settings for pressure,
@@ -245,8 +245,7 @@ static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, 
  * @retval < 0 -> Fail.
  *
  */
-static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_settings *settings,
-                               struct bme280_dev *dev);
+static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_settings *settings);
 
 /*!
  * @brief This API sets the pressure and/or temperature oversampling settings
@@ -266,8 +265,7 @@ static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_set
  *
  */
 static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
-                                          const struct bme280_settings *settings,
-                                          struct bme280_dev *dev);
+                                          const struct bme280_settings *settings);
 
 /*!
  * @brief This internal API fills the pressure oversampling settings provided by
@@ -310,8 +308,7 @@ static void fill_osr_temp_settings(uint8_t *reg_data, const struct bme280_settin
  *
  */
 static int8_t set_filter_standby_settings(uint8_t desired_settings,
-                                          const struct bme280_settings *settings,
-                                          struct bme280_dev *dev);
+                                          const struct bme280_settings *settings);
 
 /*!
  * @brief This internal API fills the filter settings provided by the user
@@ -364,7 +361,7 @@ static void parse_device_settings(const uint8_t *reg_data, struct bme280_setting
  * @retval < 0 -> Fail.
  *
  */
-static int8_t reload_device_settings(const struct bme280_settings *settings, struct bme280_dev *dev);
+static int8_t reload_device_settings(const struct bme280_settings *settings);
 
 /****************** Global Function Definitions *******************************/
 
@@ -383,7 +380,7 @@ int8_t bme280_init(struct bme280_dev *dev)
     while (try_count)
     {
         /* Read the chip-id of bme280 sensor */
-        rslt = bme280_get_regs(BME280_CHIP_ID_ADDR, &chip_id, 1, dev);
+        rslt = bme280_get_regs(BME280_CHIP_ID_ADDR, &chip_id, 1);
 
         /* Check for chip id validity */
         if ((rslt == BME280_OK) && (chip_id == BME280_CHIP_ID))
@@ -391,7 +388,7 @@ int8_t bme280_init(struct bme280_dev *dev)
             dev->chip_id = chip_id;
 
             /* Reset the sensor */
-            rslt = bme280_soft_reset(dev);
+            rslt = bme280_soft_reset();
 
             if (rslt == BME280_OK)
             {
@@ -419,7 +416,7 @@ int8_t bme280_init(struct bme280_dev *dev)
 /*!
  * @brief This API reads the data from the given register address of the sensor.
  */
-int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len, struct bme280_dev *dev)
+int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
     int8_t rslt = BME280_OK;
 
@@ -444,7 +441,7 @@ int8_t bme280_get_regs(uint8_t reg_addr, uint8_t *reg_data, uint16_t len, struct
  * @brief This API writes the given data to the register address
  * of the sensor.
  */
-int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data, struct bme280_dev *dev)
+int8_t bme280_set_regs(uint8_t reg_addr, uint8_t reg_data)
 {
     int8_t rslt = BME280_OK;
 
@@ -465,11 +462,11 @@ int8_t bme280_set_sensor_settings(uint8_t desired_settings, struct bme280_dev *d
     int8_t rslt = BME280_OK;
     uint8_t sensor_mode;
 
-    rslt = bme280_get_sensor_mode(&sensor_mode, dev);
+    rslt = bme280_get_sensor_mode(&sensor_mode);
 
     if ((rslt == BME280_OK) && (sensor_mode != BME280_SLEEP_MODE))
     {
-        rslt = put_device_to_sleep(dev);
+        rslt = put_device_to_sleep();
     }
 
     if (rslt == BME280_OK)
@@ -479,7 +476,7 @@ int8_t bme280_set_sensor_settings(uint8_t desired_settings, struct bme280_dev *d
          */
         if (are_settings_changed(OVERSAMPLING_SETTINGS, desired_settings))
         {
-            rslt = set_osr_settings(desired_settings, &dev->settings, dev);
+            rslt = set_osr_settings(desired_settings, &dev->settings);
         }
 
         /* Check if user wants to change filter and/or
@@ -487,7 +484,7 @@ int8_t bme280_set_sensor_settings(uint8_t desired_settings, struct bme280_dev *d
          */
         if ((rslt == BME280_OK) && are_settings_changed(FILTER_STANDBY_SETTINGS, desired_settings))
         {
-            rslt = set_filter_standby_settings(desired_settings, &dev->settings, dev);
+            rslt = set_filter_standby_settings(desired_settings, &dev->settings);
         }
     }
 
@@ -503,7 +500,7 @@ int8_t bme280_get_sensor_settings(struct bme280_dev *dev)
     int8_t rslt;
     uint8_t reg_data[4];
 
-    rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4, dev);
+    rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4);
 
     if (rslt == BME280_OK)
     {
@@ -521,20 +518,20 @@ int8_t bme280_set_sensor_mode(uint8_t sensor_mode, struct bme280_dev *dev)
     int8_t rslt;
     uint8_t last_set_mode;
 
-    rslt = bme280_get_sensor_mode(&last_set_mode, dev);
+    rslt = bme280_get_sensor_mode(&last_set_mode);
 
     /* If the sensor is not in sleep mode put the device to sleep
      * mode
      */
     if ((rslt == BME280_OK) && (last_set_mode != BME280_SLEEP_MODE))
     {
-        rslt = put_device_to_sleep(dev);
+        rslt = put_device_to_sleep();
     }
 
     /* Set the power mode */
     if (rslt == BME280_OK)
     {
-        rslt = write_power_mode(sensor_mode, dev);
+        rslt = write_power_mode(sensor_mode);
     }
 
     return rslt;
@@ -543,14 +540,14 @@ int8_t bme280_set_sensor_mode(uint8_t sensor_mode, struct bme280_dev *dev)
 /*!
  * @brief This API gets the power mode of the sensor.
  */
-int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev)
+int8_t bme280_get_sensor_mode(uint8_t *sensor_mode)
 {
     int8_t rslt;
 
     if (sensor_mode != NULL)
     {
         /* Read the power mode register */
-        rslt = bme280_get_regs(BME280_PWR_CTRL_ADDR, sensor_mode, 1, dev);
+        rslt = bme280_get_regs(BME280_PWR_CTRL_ADDR, sensor_mode, 1);
 
         /* Assign the power mode in the device structure */
         *sensor_mode = BME280_GET_BITS_POS_0(*sensor_mode, BME280_SENSOR_MODE);
@@ -566,14 +563,14 @@ int8_t bme280_get_sensor_mode(uint8_t *sensor_mode, struct bme280_dev *dev)
 /*!
  * @brief This API performs the soft reset of the sensor.
  */
-int8_t bme280_soft_reset(struct bme280_dev *dev)
+int8_t bme280_soft_reset(void)
 {
     int8_t rslt;
     uint8_t status_reg = 0;
     uint8_t try_run = 5;
 
     /* Write the soft reset command in the sensor */
-    rslt = bme280_set_regs(BME280_RESET_ADDR, BME280_SOFT_RESET_COMMAND, dev);
+    rslt = bme280_set_regs(BME280_RESET_ADDR, BME280_SOFT_RESET_COMMAND);
 
     if (rslt == BME280_OK)
     {
@@ -582,7 +579,7 @@ int8_t bme280_soft_reset(struct bme280_dev *dev)
         {
             /* As per data sheet - Table 1, startup time is 2 ms. */
             delay_ms(2);
-            rslt = bme280_get_regs(BME280_STATUS_REG_ADDR, &status_reg, 1, dev);
+            rslt = bme280_get_regs(BME280_STATUS_REG_ADDR, &status_reg, 1);
 
         } while ((rslt == BME280_OK) && (try_run--) && (status_reg & BME280_STATUS_IM_UPDATE));
 
@@ -613,7 +610,7 @@ int8_t bme280_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data
     if (comp_data != NULL)
     {
         /* Read the pressure and temperature data from the sensor */
-        rslt = bme280_get_regs(BME280_DATA_ADDR, reg_data, BME280_P_T_H_DATA_LEN, dev);
+        rslt = bme280_get_regs(BME280_DATA_ADDR, reg_data, BME280_P_T_H_DATA_LEN);
 
         if (rslt == BME280_OK)
         {
@@ -763,18 +760,18 @@ uint32_t bme280_cal_meas_delay(const struct bme280_settings *settings)
  * @brief This internal API sets the oversampling settings for pressure,
  * temperature and humidity in the sensor.
  */
-static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_settings *settings, struct bme280_dev *dev)
+static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_settings *settings)
 {
     int8_t rslt = BME280_W_INVALID_OSR_MACRO;
 
     if (desired_settings & BME280_OSR_HUM_SEL)
     {
-        rslt = set_osr_humidity_settings(settings, dev);
+        rslt = set_osr_humidity_settings(settings);
     }
 
     if (desired_settings & (BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL))
     {
-        rslt = set_osr_press_temp_settings(desired_settings, settings, dev);
+        rslt = set_osr_press_temp_settings(desired_settings, settings);
     }
 
     return rslt;
@@ -783,7 +780,7 @@ static int8_t set_osr_settings(uint8_t desired_settings, const struct bme280_set
 /*!
  * @brief This API sets the humidity oversampling settings of the sensor.
  */
-static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, struct bme280_dev *dev)
+static int8_t set_osr_humidity_settings(const struct bme280_settings *settings)
 {
     int8_t rslt;
     uint8_t ctrl_hum;
@@ -792,18 +789,18 @@ static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, 
     ctrl_hum = settings->osr_h & BME280_CTRL_HUM_MSK;
 
     /* Write the humidity control value in the register */
-    rslt = bme280_set_regs(BME280_CTRL_HUM_ADDR, ctrl_hum, dev);
+    rslt = bme280_set_regs(BME280_CTRL_HUM_ADDR, ctrl_hum);
 
     /* Humidity related changes will be only effective after a
      * write operation to ctrl_meas register
      */
     if (rslt == BME280_OK)
     {
-        rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &ctrl_meas, 1, dev);
+        rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &ctrl_meas, 1);
 
         if (rslt == BME280_OK)
         {
-            rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, ctrl_meas, dev);
+            rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, ctrl_meas);
         }
     }
 
@@ -815,13 +812,12 @@ static int8_t set_osr_humidity_settings(const struct bme280_settings *settings, 
  * in the sensor according to the settings selected by the user.
  */
 static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
-                                          const struct bme280_settings *settings,
-                                          struct bme280_dev *dev)
+                                          const struct bme280_settings *settings)
 {
     int8_t rslt;
     uint8_t reg_data;
 
-    rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &reg_data, 1, dev);
+    rslt = bme280_get_regs(BME280_CTRL_MEAS_ADDR, &reg_data, 1);
 
     if (rslt == BME280_OK)
     {
@@ -836,7 +832,7 @@ static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
         }
 
         /* Write the oversampling settings in the register */
-        rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, reg_data, 1, dev);
+        rslt = bme280_set_regs(BME280_CTRL_MEAS_ADDR, reg_data, 1);
     }
 
     return rslt;
@@ -847,13 +843,12 @@ static int8_t set_osr_press_temp_settings(uint8_t desired_settings,
  * in the sensor according to the settings selected by the user.
  */
 static int8_t set_filter_standby_settings(uint8_t desired_settings,
-                                          const struct bme280_settings *settings,
-                                          struct bme280_dev *dev)
+                                          const struct bme280_settings *settings)
 {
     int8_t rslt;
     uint8_t reg_data;
 
-    rslt = bme280_get_regs(BME280_CONFIG_ADDR, &reg_data, 1, dev);
+    rslt = bme280_get_regs(BME280_CONFIG_ADDR, &reg_data, 1);
 
     if (rslt == BME280_OK)
     {
@@ -868,7 +863,7 @@ static int8_t set_filter_standby_settings(uint8_t desired_settings,
         }
 
         /* Write the oversampling settings in the register */
-        rslt = bme280_set_regs(BME280_CONFIG_ADDR, reg_data, dev);
+        rslt = bme280_set_regs(BME280_CONFIG_ADDR, reg_data);
     }
 
     return rslt;
@@ -927,7 +922,7 @@ static void parse_device_settings(const uint8_t *reg_data, struct bme280_setting
 /*!
  * @brief This internal API writes the power mode in the sensor.
  */
-static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
+static int8_t write_power_mode(uint8_t sensor_mode)
 {
     int8_t rslt;
 
@@ -935,7 +930,7 @@ static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
     uint8_t sensor_mode_reg_val;
 
     /* Read the power mode register */
-    rslt = bme280_get_regs(BME280_PWR_CTRL_ADDR, &sensor_mode_reg_val, 1, dev);
+    rslt = bme280_get_regs(BME280_PWR_CTRL_ADDR, &sensor_mode_reg_val, 1);
 
     /* Set the power mode */
     if (rslt == BME280_OK)
@@ -943,7 +938,7 @@ static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
         sensor_mode_reg_val = BME280_SET_BITS_POS_0(sensor_mode_reg_val, BME280_SENSOR_MODE, sensor_mode);
 
         /* Write the power mode in the register */
-        rslt = bme280_set_regs(BME280_PWR_CTRL_ADDR, sensor_mode_reg_val, dev);
+        rslt = bme280_set_regs(BME280_PWR_CTRL_ADDR, sensor_mode_reg_val);
     }
 
     return rslt;
@@ -952,22 +947,22 @@ static int8_t write_power_mode(uint8_t sensor_mode, struct bme280_dev *dev)
 /*!
  * @brief This internal API puts the device to sleep mode.
  */
-static int8_t put_device_to_sleep(struct bme280_dev *dev)
+static int8_t put_device_to_sleep(void)
 {
     int8_t rslt;
     uint8_t reg_data[4];
     struct bme280_settings settings;
 
-    rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4, dev);
+    rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4);
 
     if (rslt == BME280_OK)
     {
         parse_device_settings(reg_data, &settings);
-        rslt = bme280_soft_reset(dev);
+        rslt = bme280_soft_reset();
 
         if (rslt == BME280_OK)
         {
-            rslt = reload_device_settings(&settings, dev);
+            rslt = reload_device_settings(&settings);
         }
     }
 
@@ -978,15 +973,15 @@ static int8_t put_device_to_sleep(struct bme280_dev *dev)
  * @brief This internal API reloads the already existing device settings in
  * the sensor after soft reset.
  */
-static int8_t reload_device_settings(const struct bme280_settings *settings, struct bme280_dev *dev)
+static int8_t reload_device_settings(const struct bme280_settings *settings)
 {
     int8_t rslt;
 
-    rslt = set_osr_settings(BME280_ALL_SETTINGS_SEL, settings, dev);
+    rslt = set_osr_settings(BME280_ALL_SETTINGS_SEL, settings);
 
     if (rslt == BME280_OK)
     {
-        rslt = set_filter_standby_settings(BME280_ALL_SETTINGS_SEL, settings, dev);
+        rslt = set_filter_standby_settings(BME280_ALL_SETTINGS_SEL, settings);
     }
 
     return rslt;
@@ -1312,7 +1307,7 @@ static int8_t get_calib_data(struct bme280_dev *dev)
     uint8_t calib_data[BME280_TEMP_PRESS_CALIB_DATA_LEN] = { 0 };
 
     /* Read the calibration data from the sensor */
-    rslt = bme280_get_regs(BME280_TEMP_PRESS_CALIB_DATA_ADDR, calib_data, BME280_TEMP_PRESS_CALIB_DATA_LEN, dev);
+    rslt = bme280_get_regs(BME280_TEMP_PRESS_CALIB_DATA_ADDR, calib_data, BME280_TEMP_PRESS_CALIB_DATA_LEN);
 
     if (rslt == BME280_OK)
     {
@@ -1322,7 +1317,7 @@ static int8_t get_calib_data(struct bme280_dev *dev)
         parse_temp_press_calib_data(calib_data, dev);
 
         /* Read the humidity calibration data from the sensor */
-        rslt = bme280_get_regs(BME280_HUMIDITY_CALIB_DATA_ADDR, calib_data, BME280_HUMIDITY_CALIB_DATA_LEN, dev);
+        rslt = bme280_get_regs(BME280_HUMIDITY_CALIB_DATA_ADDR, calib_data, BME280_HUMIDITY_CALIB_DATA_LEN);
 
         if (rslt == BME280_OK)
         {
