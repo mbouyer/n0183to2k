@@ -137,7 +137,7 @@ send_wind_data(void)
 		data->speed = 0xffff;
 		data->dir = 0xffff;
 	}
-	data->ref = WIND_REF_TRUE_N;
+	data->ref = WIND_REF_APPARENT;
 	if (! nmea2000_send_single_frame(&msg))
 		printf("send NMEA2000_WIND_DATA failed\n");
 }
