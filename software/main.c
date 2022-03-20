@@ -76,13 +76,11 @@ static enum i2c_status {
 } i2c_status;
 
 struct bme280_dev bme280_dev;
+struct bme280_data bme280_data;
 
-int32_t temp; /* degK * 100 */
-uint32_t hum; /* %RH * 1000 */
-uint32_t press; /* Pa */
-uint8_t bme280_id;
-static char counter_sth20;
-static uint16_t i2cval;
+uint16_t temp; /* degK * 100 */
+uint16_t hum; /* %RH * 250 */
+uint16_t press; /* hPa */
 
 #define ANEMO_BUFSIZE 128
 static char anemo_rxbuf1[ANEMO_BUFSIZE];
@@ -107,11 +105,11 @@ send_env_param(void)
 	msg.dlc = sizeof(struct nmea2000_env_param);
 	msg.data = &nmea2000_data[0];
 	data->sid  = sid;
-	data->tsource = ENV_TSOURCE_OUTSIDE;
-	data->hsource = ENV_HSOURCE_OUTSIDE;
-	data->temp = (uint16_t)temp;
-	data->hum = (uint16_t)(hum / 4);
-	data->press = 0xffff;
+	data->tsource = ENV_TSOURCE_INSIDE;
+	data->hsource = ENV_HSOURCE_INSIDE;
+	data->temp = temp;
+	data->hum = hum;
+	data->press = press;
 	if (! nmea2000_send_single_frame(&msg))
 		printf("send NMEA2000_ENV_PARAM failed\n");
 }
@@ -298,6 +296,8 @@ main(void)
 {
 	char c;
 	static unsigned int poll_count;
+	int8_t bme280_rslt;
+	uint8_t settings_sel;
 
 	sid = 0;
 
@@ -429,11 +429,40 @@ main(void)
 	/* enable watch dog timer */
 	WDTCON0bits.SEN = 1;
 
-	if (bme280_init(&bme280_dev) != BME280_OK) {
-		printf("bme280 fail\n");
-	} else {
-		printf("bme280 id 0x%x\n", bme280_dev.chip_id);
+	bme280_rslt = bme280_init(&bme280_dev);
+	if (bme280_rslt != BME280_OK) {
+		printf("bme280 init fail\n");
 	}
+
+	bme280_dev.settings.osr_h = BME280_OVERSAMPLING_1X;
+	bme280_dev.settings.osr_p = BME280_OVERSAMPLING_16X;
+	bme280_dev.settings.osr_t = BME280_OVERSAMPLING_2X;
+	bme280_dev.settings.filter = BME280_FILTER_COEFF_16;
+	bme280_dev.settings.standby_time = BME280_STANDBY_TIME_62_5_MS;
+
+	settings_sel = BME280_OSR_PRESS_SEL;
+	settings_sel |= BME280_OSR_TEMP_SEL;
+	settings_sel |= BME280_OSR_HUM_SEL;
+	settings_sel |= BME280_STANDBY_SEL;
+	settings_sel |= BME280_FILTER_SEL;
+	if (bme280_rslt == BME280_OK) {
+		bme280_rslt =
+		    bme280_set_sensor_settings(settings_sel, &bme280_dev);
+		if (bme280_rslt != BME280_OK) {
+			printf("bme280 settings fail\n");
+		}
+	}
+	if (bme280_rslt == BME280_OK) {
+		bme280_rslt =
+		    bme280_set_sensor_mode(BME280_NORMAL_MODE, &bme280_dev);
+		if (bme280_rslt != BME280_OK) {
+			printf("bme280 mode fail\n");
+		}
+	}
+
+	if (bme280_rslt == BME280_OK)
+		printf("bme280 id 0x%x delay %lu\n", bme280_dev.chip_id,
+		    bme280_cal_meas_delay(&bme280_dev.settings));
 
 	printf("ready");
 	while (nmea2000_status != NMEA2000_S_OK) {
@@ -492,6 +521,25 @@ again:
 					led_pattern = 0x5; /* 2 short blink */
 				}
 				wind_ok = 0;
+				if (bme280_get_sensor_data(BME280_ALL,
+				    &bme280_data, &bme280_dev) != BME280_OK) {
+					printf("bme280 data fail\n");
+					led_pattern = 0x5; /* 2 short blink */
+					temp = press = hum = 0xffff;
+				} else {
+					printf("bme280 %ld, %ld, %ld\n",
+					    bme280_data.temperature,
+					    bme280_data.pressure,
+					    bme280_data.humidity);
+					temp = (uint16_t)(
+					  bme280_data.temperature + 27315);
+					hum = (uint16_t)(
+					  (float)bme280_data.humidity / 4.096);
+					press =(uint16_t)(
+					    (bme280_data.pressure + 50) / 100);
+					send_env_param();
+				}
+					
 				if (seconds == 10) {
 					seconds = 0;
 					/* in normal state, one short
