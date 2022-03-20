@@ -178,7 +178,7 @@ i2c_writereg(const uint8_t address, uint8_t reg, uint8_t data)
 	I2C1CON1bits.ACKCNT = 1;
 	I2C1ADB1 = address;
 	I2C1CNTH = 0;
-	I2C1CNTL = 1;
+	I2C1CNTL = 2;
 	I2C1TXB = reg;
 	I2C1CON0bits.S = 1;
 	I2C_WAIT_TX;
