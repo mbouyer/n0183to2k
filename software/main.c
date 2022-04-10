@@ -491,14 +491,18 @@ again:
 			nmea2000_receive();
 		}
 
-		if (nmea2000_status == NMEA2000_S_CLAIMING) {
-			if ((timer0_read() - poll_count) > TIMER0_5MS) {
-				nmea2000_poll(5);
-				poll_count = timer0_read();
+		if (nmea2000_status != NMEA2000_S_OK) {
+			uint16_t ticks, tmrv;
+		
+			tmrv = timer0_read();
+			ticks = tmrv - poll_count;
+			if (ticks > TIMER0_5MS) {
+				poll_count = tmrv;
+				nmea2000_poll(ticks / TIMER0_1MS);
 			}
 			if (nmea2000_status == NMEA2000_S_OK) {
 				printf("new addr %d\n", nmea2000_addr);
-			}
+													}
 		};
 
 		if (softintrs.bits.int_10hz) {
@@ -539,7 +543,7 @@ again:
 					    (bme280_data.pressure + 50) / 100);
 					send_env_param();
 				}
-					
+
 				if (seconds == 10) {
 					seconds = 0;
 					/* in normal state, one short
@@ -547,10 +551,23 @@ again:
 					 */
 					if (led_pattern == 0)
 						led_pattern = 1;
-				} 
+				}
 			}
 			LED = (led_pattern & 0x1);
 			led_pattern = led_pattern >> 1;
+			if (nmea2000_status == NMEA2000_S_OK) {
+				uint16_t ticks, tmrv;
+
+				tmrv = timer0_read();
+				ticks = tmrv - poll_count;
+				if (ticks > TIMER0_5MS) {
+					poll_count = tmrv;
+					nmea2000_poll(ticks / TIMER0_1MS);
+				}
+				if (nmea2000_status != NMEA2000_S_OK) {
+					printf("lost CAN bus %d\n", ticks);
+				}
+			}
 		}
 		if (softintrs.bits.anemo_rx) {
 			parse_anemo_rx();
